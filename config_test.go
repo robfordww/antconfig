@@ -118,9 +118,10 @@ func TestStandardUsage(t *testing.T) {
 	t.Setenv("DB_USER", "testuser")
 	t.Setenv("DB_PASSWORD", "testpassword")
 
-	// Set effective config
-	antConfig := &AntConfig{}
-	err := antConfig.SetValues(&config)
+    // Set effective config
+    antConfig := &AntConfig{}
+    if err := antConfig.SetConfig(&config); err != nil { t.Fatal(err) }
+    err := antConfig.WriteConfigValues()
 	if err != nil {
 		t.Fatalf("SetEffectiveConfig failed: %v", err)
 	}
@@ -147,10 +148,11 @@ func TestStandardUsage(t *testing.T) {
 
 func TestDefaultValues(t *testing.T) {
 	config := TestConfig{}
-	antConfig := &AntConfig{}
+    antConfig := &AntConfig{}
 
-	// Set effective config without environment variables
-	err := antConfig.SetValues(&config)
+    // Set effective config without environment variables
+    if err := antConfig.SetConfig(&config); err != nil { t.Fatal(err) }
+    err := antConfig.WriteConfigValues()
 	if err != nil {
 		t.Fatalf("SetEffectiveConfig failed: %v", err)
 	}
@@ -194,9 +196,10 @@ func TestFlagOverridesHighestPriority(t *testing.T) {
 		"--authpassword", "clipass",
 	})
 
-	if err := ant.SetValues(&cfg); err != nil {
-		t.Fatalf("SetValues with flags failed: %v", err)
-	}
+    if err := ant.SetConfig(&cfg); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatalf("SetValues with flags failed: %v", err)
+    }
 
 	if cfg.SecretKey != "cli-secret" {
 		t.Fatalf("expected SecretKey from flags, got %q", cfg.SecretKey)
@@ -284,24 +287,24 @@ func TestLocateFromWorkingDir_NotFound(t *testing.T) {
 }
 
 func TestSetEffectiveConfig_InvalidInputs(t *testing.T) {
-	ant := &AntConfig{}
+    ant := &AntConfig{}
 
-	// non-pointer
-	if err := ant.SetValues(TestConfig{}); err == nil {
-		t.Fatal("expected error for non-pointer input")
-	}
+    // non-pointer
+    if err := ant.SetConfig(TestConfig{}); err == nil {
+        t.Fatal("expected error for non-pointer input")
+    }
 
-	// nil pointer
-	var nilCfg *TestConfig
-	if err := ant.SetValues(nilCfg); err == nil {
-		t.Fatal("expected error for nil pointer input")
-	}
+    // nil pointer
+    var nilCfg *TestConfig
+    if err := ant.SetConfig(nilCfg); err == nil {
+        t.Fatal("expected error for nil pointer input")
+    }
 
-	// pointer to non-struct
-	var x int
-	if err := ant.SetValues(&x); err == nil {
-		t.Fatal("expected error for pointer to non-struct")
-	}
+    // pointer to non-struct
+    var x int
+    if err := ant.SetConfig(&x); err == nil {
+        t.Fatal("expected error for pointer to non-struct")
+    }
 }
 
 func TestTypes_DefaultsAndEnvOverrides(t *testing.T) {
@@ -317,10 +320,11 @@ func TestTypes_DefaultsAndEnvOverrides(t *testing.T) {
 	ant := &AntConfig{}
 
 	// Defaults only
-	var a TypesCfg
-	if err := ant.SetValues(&a); err != nil {
-		t.Fatalf("SetEffectiveConfig: %v", err)
-	}
+    var a TypesCfg
+    if err := ant.SetConfig(&a); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatalf("SetEffectiveConfig: %v", err)
+    }
 	if a.S != "s0" || a.I != 1 || a.U != 2 || a.B != true || a.F != 3.14 || len(a.L) != 3 {
 		t.Fatalf("unexpected defaults: %+v", a)
 	}
@@ -333,10 +337,11 @@ func TestTypes_DefaultsAndEnvOverrides(t *testing.T) {
 	t.Setenv("F", "2.5")
 	t.Setenv("L", "[5,6]")
 
-	var b TypesCfg
-	if err := ant.SetValues(&b); err != nil {
-		t.Fatalf("SetEffectiveConfig: %v", err)
-	}
+    var b TypesCfg
+    if err := ant.SetConfig(&b); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatalf("SetEffectiveConfig: %v", err)
+    }
 	if b.S != "X" || b.I != 10 || b.U != 11 || b.B != false || b.F != 2.5 || len(b.L) != 2 || b.L[0] != 5 || b.L[1] != 6 {
 		t.Fatalf("unexpected env overrides: %+v", b)
 	}
@@ -365,10 +370,11 @@ func TestEnvParseErrors(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.key, func(t *testing.T) {
 			t.Setenv(c.key, c.val)
-			var cfg Cfg
-			if err := ant.SetValues(&cfg); err == nil {
-				t.Fatalf("expected parse error for %s=%q", c.key, c.val)
-			}
+            var cfg Cfg
+            if err := ant.SetConfig(&cfg); err != nil { t.Fatal(err) }
+            if err := ant.WriteConfigValues(); err == nil {
+                t.Fatalf("expected parse error for %s=%q", c.key, c.val)
+            }
 		})
 	}
 }
@@ -379,10 +385,11 @@ func TestEmptyEnvDoesNotOverride(t *testing.T) {
 	}
 	ant := &AntConfig{}
 	t.Setenv("S", "")
-	var cfg Cfg
-	if err := ant.SetValues(&cfg); err != nil {
-		t.Fatal(err)
-	}
+    var cfg Cfg
+    if err := ant.SetConfig(&cfg); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatal(err)
+    }
 	if cfg.S != "def" {
 		t.Fatalf("expected default to remain, got %q", cfg.S)
 	}
@@ -394,10 +401,11 @@ func TestUnsupportedEnvType(t *testing.T) {
 	}
 	ant := &AntConfig{}
 	t.Setenv("M", "{}")
-	var cfg Cfg
-	if err := ant.SetValues(&cfg); err == nil {
-		t.Fatal("expected unsupported type error for map with env tag")
-	}
+    var cfg Cfg
+    if err := ant.SetConfig(&cfg); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err == nil {
+        t.Fatal("expected unsupported type error for map with env tag")
+    }
 }
 
 func TestSliceNonIntIgnored(t *testing.T) {
@@ -406,10 +414,11 @@ func TestSliceNonIntIgnored(t *testing.T) {
 	}
 	ant := &AntConfig{}
 	t.Setenv("S", "[\"a\",\"b\"]")
-	var cfg Cfg
-	if err := ant.SetValues(&cfg); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+    var cfg Cfg
+    if err := ant.SetConfig(&cfg); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatalf("unexpected error: %v", err)
+    }
 	if cfg.S != nil {
 		t.Fatalf("expected []string to be untouched (nil), got %#v", cfg.S)
 	}
@@ -445,9 +454,10 @@ func TestDotEnvPrecedenceAndParsing(t *testing.T) {
 	// Explicit env should win over .env
 	t.Setenv("S", "fromos")
 
-	if err := ant.SetValues(&cfg); err != nil {
-		t.Fatalf("SetValues: %v", err)
-	}
+    if err := ant.SetConfig(&cfg); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatalf("SetValues: %v", err)
+    }
 
 	if cfg.S != "fromos" { // OS wins
 		t.Fatalf("expected S from OS, got %q", cfg.S)
@@ -479,9 +489,10 @@ func TestDotEnvDoesNotOverrideExplicitEmptyEnv(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("K", "") // explicit empty
-	if err := ant.SetValues(&cfg); err != nil {
-		t.Fatal(err)
-	}
+    if err := ant.SetConfig(&cfg); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatal(err)
+    }
 	if cfg.K != "def" {
 		t.Fatalf("expected default to remain when OS env is empty, got %q", cfg.K)
 	}
@@ -504,10 +515,11 @@ func TestDotEnvAutoDiscoveryWorkingDir(t *testing.T) {
 		K string `env:"AUTO_KEY" default:"def"`
 	}
 	var cfg Cfg
-	ant := &AntConfig{} // no EnvPath set -> should auto-discover .env in CWD
-	if err := ant.SetValues(&cfg); err != nil {
-		t.Fatalf("SetValues: %v", err)
-	}
+    ant := &AntConfig{} // no EnvPath set -> should auto-discover .env in CWD
+    if err := ant.SetConfig(&cfg); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatalf("SetValues: %v", err)
+    }
 	if cfg.K != "auto" {
 		t.Fatalf("expected auto-discovered .env value, got %q", cfg.K)
 	}
@@ -541,13 +553,16 @@ func TestListFlagsWithPrefix(t *testing.T) {
 }
 
 func TestBindFlagSetAndApply(t *testing.T) {
-	var cfg TestConfig
-	ant := &AntConfig{}
-	ant.SetFlagPrefix("config-")
-	fs := flag.NewFlagSet("antconfig-test", flag.ContinueOnError)
-	if err := ant.BindFlags(fs, &cfg); err != nil {
-		t.Fatalf("BindFlags error: %v", err)
-	}
+    var cfg TestConfig
+    ant := &AntConfig{}
+    ant.SetFlagPrefix("config-")
+    fs := flag.NewFlagSet("antconfig-test", flag.ContinueOnError)
+    if err := ant.SetConfig(&cfg); err != nil {
+        t.Fatalf("SetConfig error: %v", err)
+    }
+    if err := ant.BindConfigFlags(fs); err != nil {
+        t.Fatalf("BindFlags error: %v", err)
+    }
 	if err := fs.Parse([]string{
 		"--config-secretkey", "fs-secret",
 		"--config-encrypt=false",
@@ -556,10 +571,9 @@ func TestBindFlagSetAndApply(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("flag parse error: %v", err)
 	}
-	ant.SetFlagSet(fs)
-	if err := ant.SetValues(&cfg); err != nil {
-		t.Fatalf("SetValues failed: %v", err)
-	}
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatalf("SetValues failed: %v", err)
+    }
 	if cfg.SecretKey != "fs-secret" {
 		t.Fatalf("expected SecretKey from FlagSet, got %q", cfg.SecretKey)
 	}
@@ -584,10 +598,11 @@ func TestNestedPointerInit(t *testing.T) {
 	}
 	ant := &AntConfig{}
 	t.Setenv("ENV_NAME", "y")
-	var o Outer
-	if err := ant.SetValues(&o); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+    var o Outer
+    if err := ant.SetConfig(&o); err != nil { t.Fatal(err) }
+    if err := ant.WriteConfigValues(); err != nil {
+        t.Fatalf("unexpected error: %v", err)
+    }
 	if o.Inner == nil {
 		t.Fatal("expected Inner to be initialized")
 	}

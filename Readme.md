@@ -57,7 +57,8 @@ func main() {
 
     var cfg AppConfig
     ant := &antconfig.AntConfig{}
-    if err := ant.SetValues(&cfg); err != nil {
+    _ = ant.SetConfig(&cfg)
+    if err := ant.WriteConfigValues(); err != nil {
         panic(err)
     }
 
@@ -98,12 +99,12 @@ Both return the first match found or `ErrConfigNotFound` if not found.
 - `type AntConfig struct { EnvPath, ConfigPath string }`
   - `SetEnvPath(path string) error`: set `.EnvPath` and validate the file exists. When set, `.env` is loaded and variables are added to the process environment only if they are not already set. If `EnvPath` is not set, AntConfig auto-discovers a `.env` in the current working directory.
   - `SetConfigPath(path string) error`: set `.ConfigPath` and validate it exists.
-  - `SetValues(cfg any) error`: apply defaults, env, then flag overrides to `cfg`.
+  - `WriteConfigValues() error`: apply defaults, config file (JSON/JSONC), .env, env, then flag overrides to the config passed via `SetConfig`.
   - `SetFlagArgs(args []string)`: provide explicit CLI args (defaults to `os.Args[1:]`).
   - `SetFlagPrefix(prefix string)`: set optional prefix used for generated CLI flags.
   - `ListFlags(cfg any) ([]FlagSpec, error)`: return available flags with names and types.
-  - `BindFlags(fs *flag.FlagSet, cfg any) error`: register flags onto a provided `FlagSet` for dynamic help.
-  - `SetFlagSet(fs *flag.FlagSet)`: set a `FlagSet` to read parsed values from when applying flags.
+  - `SetConfig(&cfg) error`: provide the config pointer for reflection when binding flags.
+  - `BindConfigFlags(fs *flag.FlagSet) error`: register flags derived from your config onto a provided `FlagSet` (and bind it for later reads).
 
 - Struct tags on `cfg` fields
   - `default:"…"`: default value used when field is zero-value.
@@ -126,11 +127,11 @@ for _, f := range flags {
 
 // Populate a FlagSet and parse
 fs := flag.NewFlagSet("myapp", flag.ExitOnError)
-if err := ant.BindFlags(fs, &cfg); err != nil { panic(err) }
+if err := ant.SetConfig(&cfg); err != nil { panic(err) }
+if err := ant.BindConfigFlags(fs); err != nil { panic(err) }
 _ = fs.Parse(os.Args[1:])
-ant.SetFlagSet(fs)
-// Apply: defaults -> env -> flags (from FlagSet)
-if err := ant.SetValues(&cfg); err != nil { panic(err) }
+// Apply: defaults -> config file -> .env -> env -> flags (from FlagSet)
+if err := ant.WriteConfigValues(); err != nil { panic(err) }
 ```
 
 ## Notes
