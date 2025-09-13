@@ -40,7 +40,7 @@ func TestPrecedence_ConfigEnvDotenvFlags(t *testing.T) {
 	}
 
     var cfg Cfg
-    ant := &AntConfig{}
+    ant := New()
 	if err := ant.SetConfigPath(cfgPath); err != nil {
 		t.Fatalf("SetConfigPath: %v", err)
 	}

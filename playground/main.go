@@ -9,37 +9,36 @@ import (
 )
 
 type SecretKey struct {
-	Key string `default:"secretkey123" env:"SEC" flag:"sec"`
+	Key string `default:"secretkey123" env:"SEC" flag:"sec" desc:"Secret key for encryption"`
 }
 
 type Config struct {
 	Host string `default:"localhost" env:"CONFIG_HOST"`
 	Port int    `default:"8080" env:"CONFIG_PORT"`
-	SC   *SecretKey
+	SC   SecretKey
 }
 
 func main() {
 
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	// regular application flags
+	var cfg Config
+	ac := antconfig.New().MustSetConfig(&cfg)
+	ac.SetFlagPrefix("config-")
+	ac.MustBindConfigFlags(fs)
+	loc, err := antconfig.LocateFromExeUp("config_test.jsonc")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	ac.SetConfigPath(loc)
+
 	fs.Bool("verbose", false, "Enable verbose output")
 	fs.Bool("v", false, "(alias for --verbose)")
 	fs.Bool("help", false, "Show help message")
 	fs.Bool("h", false, "(alias for --help)")
 
-	var cfg Config
-	ac := antconfig.AntConfig{}
-	// Provide the config reference, then register config-derived flags
-	if err := ac.SetConfig(&cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "error setting config: %v\n", err)
-		os.Exit(1)
-	}
-	if err := ac.BindConfigFlags(fs); err != nil {
-		fmt.Fprintf(os.Stderr, "error binding config flags: %v\n", err)
-		os.Exit(1)
-	}
-
-	fs.Usage = func() { Usage(*fs) }
+	fs.Usage = func() { Usage(*fs, ac) }
 
 	fs.Parse(os.Args[1:])
 
@@ -47,19 +46,22 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Config: %#v\n %v\n", cfg, cfg.SC)
 
 	// if help or h flag is set, print usage and exit
 	helpset := fs.Lookup("help").Value.String() == "true" ||
 		fs.Lookup("h").Value.String() == "true"
 	if helpset {
-		Usage(*fs)
+		fs.Usage()
 		os.Exit(0)
 	}
+
+	fmt.Printf("Config: %#v\n %#v\n", cfg, cfg.SC)
 }
 
-func Usage(fs flag.FlagSet) {
+func Usage(fs flag.FlagSet, ac *antconfig.AntConfig) {
 	fmt.Println("Usage: antapp [options]")
 	fmt.Println("Options:")
 	fs.PrintDefaults()
+	fmt.Println()
+	fmt.Print(ac.EnvHelpString())
 }

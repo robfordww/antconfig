@@ -34,7 +34,7 @@ func TestConfigAutoDiscovery_Upwards(t *testing.T) {
 		I int    `default:"1"`
 	}
     var cfg Cfg
-    ant := &AntConfig{} // no ConfigPath set -> should auto-discover upwards
+    ant := New() // no ConfigPath set -> should auto-discover upwards
     if err := ant.SetConfig(&cfg); err != nil { t.Fatal(err) }
     if err := ant.WriteConfigValues(); err != nil {
         t.Fatalf("SetValues: %v", err)

@@ -19,8 +19,8 @@ AntConfig is a small, zero-dependency Go library for application configuration. 
 Current precedence when applying configuration values:
 
 1) Defaults from struct tags (`default:"…"`)
-2) Configuration file (.json or .jsonc). If `ConfigPath` is not set, AntConfig auto-discovers `config.jsonc` or `config.json` starting from the current working directory and walking upward.
-3) .env file (when `AntConfig.EnvPath` is set)
+2) Configuration file (.json or .jsonc). If no path is set via `SetConfigPath`, AntConfig auto-discovers `config.jsonc` or `config.json` starting from the current working directory and walking upward.
+3) .env file (when `SetEnvPath` is used)
 4) Environment variables (`env:"NAME"`) — override .env
 5) Command line flags (`flag:"name"`) — highest priority
 
@@ -56,8 +56,7 @@ func main() {
     os.Setenv("DB_PORT", "[15432,13306]")
 
     var cfg AppConfig
-    ant := &antconfig.AntConfig{}
-    _ = ant.SetConfig(&cfg)
+    ant := antconfig.New().MustSetConfig(&cfg)
     if err := ant.WriteConfigValues(); err != nil {
         panic(err)
     }
@@ -96,7 +95,7 @@ Both return the first match found or `ErrConfigNotFound` if not found.
 
 ## API Overview (package `antconfig`)
 
-- `type AntConfig struct { EnvPath, ConfigPath string }`
+- `type AntConfig` (fields unexported)
   - `SetEnvPath(path string) error`: set `.EnvPath` and validate the file exists. When set, `.env` is loaded and variables are added to the process environment only if they are not already set. If `EnvPath` is not set, AntConfig auto-discovers a `.env` in the current working directory.
   - `SetConfigPath(path string) error`: set `.ConfigPath` and validate it exists.
   - `WriteConfigValues() error`: apply defaults, config file (JSON/JSONC), .env, env, then flag overrides to the config passed via `SetConfig`.
@@ -104,12 +103,14 @@ Both return the first match found or `ErrConfigNotFound` if not found.
   - `SetFlagPrefix(prefix string)`: set optional prefix used for generated CLI flags.
   - `ListFlags(cfg any) ([]FlagSpec, error)`: return available flags with names and types.
   - `SetConfig(&cfg) error`: provide the config pointer for reflection when binding flags.
+  - `MustSetConfig(&cfg) *AntConfig`: like `SetConfig` but panics on error and returns the receiver for chaining.
   - `BindConfigFlags(fs *flag.FlagSet) error`: register flags derived from your config onto a provided `FlagSet` (and bind it for later reads).
 
 - Struct tags on `cfg` fields
   - `default:"…"`: default value used when field is zero-value.
   - `env:"ENV_NAME"`: if present and non-empty, overrides the field with a parsed value.
   - `flag:"name"`: if present, allows `--name value` (or `--name=value`) to override the field. When `SetFlagPrefix("config-")` is set, use `--config-name` instead.
+  - `desc:"…"`: optional description used as usage text when registering flags via `BindConfigFlags` and shown in env help.
 
 ## Dynamic Flag Usage
 
@@ -117,7 +118,7 @@ You can build CLI usage dynamically from your config struct. For example:
 
 ```go
 var cfg AppConfig
-ant := &antconfig.AntConfig{}
+ant := antconfig.New().MustSetConfig(&cfg)
 ant.SetFlagPrefix("config-") // optional
 flags, _ := ant.ListFlags(&cfg)
 fmt.Println("Config flags:")
@@ -127,7 +128,6 @@ for _, f := range flags {
 
 // Populate a FlagSet and parse
 fs := flag.NewFlagSet("myapp", flag.ExitOnError)
-if err := ant.SetConfig(&cfg); err != nil { panic(err) }
 if err := ant.BindConfigFlags(fs); err != nil { panic(err) }
 _ = fs.Parse(os.Args[1:])
 // Apply: defaults -> config file -> .env -> env -> flags (from FlagSet)

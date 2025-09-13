@@ -8,12 +8,12 @@
   // Nested database configuration
   "Database": {
     "Host": "db.from.file",   // override default "localhost"
-    "Ports": [15432, 13306,],  // trailing comma allowed in JSONC
+    "Ports": [15432, 13306],  // trailing comma allowed in JSONC
     "Encrypt": true,
     "Auth": {
       "User": "fileuser",
-      "Password": "filepassword",
-    },
-  },
+      "Password": "filepassword"
+    }
+  }
 }
 

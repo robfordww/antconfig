@@ -3,6 +3,8 @@ package antconfig
 // The MIT License (MIT)
 // Copyright (c) 2021 Josh Baker
 
+// ToJSON converts JSONC (JSON with // and /* */ comments and trailing commas)
+// into strict JSON suitable for json.Unmarshal. It allocates a new buffer.
 func ToJSON(src []byte) []byte {
 	return toJSON(src, nil)
 }
