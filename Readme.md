@@ -14,19 +14,6 @@ AntConfig is a small, zero-dependency Go library for application configuration. 
 - Supports .env files
 - Discovery helpers: locate config file by walking upward from CWD or executable.
 
-## Installation
-
-Install via `go get` (Go modules):
-
-```bash
-go get github.com/robfordww/antconfig@latest
-```
-
-Then import it:
-
-```go
-import "github.com/robfordww/antconfig"
-```
 
 ## Status and Precedence
 
@@ -40,42 +27,59 @@ Current precedence when applying configuration values:
 
 ## Quick Start
 
+Install via `go get` (Go modules):
+
+```bash
+go get github.com/robfordww/antconfig@latest
+```
+
 ```go
 package main
 
 import (
+    "flag"
     "fmt"
     "os"
+
     "github.com/robfordww/antconfig"
 )
 
-type AppConfig struct {
-    Heading string `env:"HEADING" default:"south"`
-    Speed   int    `default:"42"`
-    Database struct {
-        Host    string `env:"DB_HOST" default:"localhost"`
-        Ports   []int  `env:"DB_PORT" default:"[5432,3306]"`
-        Encrypt bool   `env:"DB_ENCRYPT"`
-        Auth struct {
-            User string `env:"DB_USER" default:"user"`
-            Pass string `env:"DB_PASSWORD" default:"password"`
-        }
-    }
+type SecretKey struct {
+    Key string `default:"secretkey123" env:"SEC" flag:"sec" desc:"Secret key for encryption"`
+}
+
+type Config struct {
+    Host string    `default:"localhost" env:"CONFIG_HOST"`
+    Port int       `default:"8080" env:"CONFIG_PORT"`
+    SC   SecretKey
 }
 
 func main() {
-    // Example env overrides
-    os.Setenv("HEADING", "north")
-    os.Setenv("DB_HOST", "db.example")
-    os.Setenv("DB_PORT", "[15432,13306]")
+    fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-    var cfg AppConfig
-    ant := antconfig.New().MustSetConfig(&cfg)
-    if err := ant.WriteConfigValues(); err != nil {
-        panic(err)
+    var cfg Config
+    ac := antconfig.New().MustSetConfig(&cfg)
+    ac.SetFlagPrefix("config-")            // optional flag prefix
+    ac.MustBindConfigFlags(fs)             // register flags from struct tags
+
+    // Optional: add your own app flags
+    fs.Bool("verbose", false, "Enable verbose output")
+
+    // Show env help after flag defaults
+    fs.Usage = func() {
+        fs.PrintDefaults()
+        fmt.Print("\n" + ac.EnvHelpString())
     }
 
-    fmt.Printf("%+v\n", cfg)
+    _ = fs.Parse(os.Args[1:])             // parse CLI args
+
+    // Apply: defaults -> config file -> .env -> env -> flags
+    if err := ac.WriteConfigValues(); err != nil {
+        fmt.Fprintln(os.Stderr, "error:", err)
+        os.Exit(1)
+    }
+
+    fmt.Printf("Config: %#v\n", cfg)
 }
 ```
 
