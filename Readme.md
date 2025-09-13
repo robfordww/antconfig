@@ -14,6 +14,20 @@ AntConfig is a small, zero-dependency Go library for application configuration. 
 - Supports .env files
 - Discovery helpers: locate config file by walking upward from CWD or executable.
 
+## Installation
+
+Install via `go get` (Go modules):
+
+```bash
+go get github.com/robfordww/antconfig@latest
+```
+
+Then import it:
+
+```go
+import "github.com/robfordww/antconfig"
+```
+
 ## Status and Precedence
 
 Current precedence when applying configuration values:
