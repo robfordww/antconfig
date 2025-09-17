@@ -5,7 +5,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/robfordww/antconfig.svg)](https://pkg.go.dev/github.com/robfordww/antconfig)
 [![Go Report Card](https://goreportcard.com/badge/github.com/robfordww/antconfig)](https://goreportcard.com/report/github.com/robfordww/antconfig)
 
-AntConfig is a small, zero-dependency Go configuration library focused on simplicity, clarity, and predictable precedence. Version `v0.1.0` marks the first tagged release and introduces refreshed documentation. Configuration is defined through tagged structs, which can be overridden by environment variables, a .env file, or command-line flags. Optional configuration files are supported in JSON or JSONC format only. Unlike many other configuration libraries that include support for TOML, YAML, and extensive feature sets, AntConfig is opinionated: it keeps things minimal, simple, and free of external dependencies.
+AntConfig is a small, zero-dependency Go configuration library focused on simplicity, clarity, and predictable precedence. Configuration is defined through tagged structs, which can be overridden by environment variables, a .env file, or command-line flags. Optional configuration files are supported in JSON or JSONC format only. Unlike many other configuration libraries that include support for TOML, YAML, and extensive feature sets, AntConfig is opinionated: it keeps things minimal, simple, and free of external dependencies.
 
 ## Why Choose AntConfig for Go Configuration
 
