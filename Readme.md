@@ -2,7 +2,25 @@
 
 # AntConfig
 
-AntConfig is a small, zero-dependency Go library for application configuration. It focuses on simplicity and clarity. Configuration is defined through tagged structs, which can be overridden by environment variables, a .env file, or command-line flags. Optional configuration files are supported in JSON or JSONC format only. Unlike many other configuration libraries that include support for TOML, YAML, and extensive feature sets, AntConfig is opinionated: it keeps things minimal, simple, and free of external dependencies.
+[![Go Reference](https://pkg.go.dev/badge/github.com/robfordww/antconfig.svg)](https://pkg.go.dev/github.com/robfordww/antconfig)
+[![Go Report Card](https://goreportcard.com/badge/github.com/robfordww/antconfig)](https://goreportcard.com/report/github.com/robfordww/antconfig)
+
+AntConfig is a small, zero-dependency Go configuration library focused on simplicity, clarity, and predictable precedence. Version `v0.1.0` marks the first tagged release and introduces refreshed documentation. Configuration is defined through tagged structs, which can be overridden by environment variables, a .env file, or command-line flags. Optional configuration files are supported in JSON or JSONC format only. Unlike many other configuration libraries that include support for TOML, YAML, and extensive feature sets, AntConfig is opinionated: it keeps things minimal, simple, and free of external dependencies.
+
+## Quick Links
+
+- [Go Reference](https://pkg.go.dev/github.com/robfordww/antconfig)
+- [Go Report Card](https://goreportcard.com/report/github.com/robfordww/antconfig)
+- [Package Issues](https://github.com/robfordww/antconfig/issues)
+- [Playground Example](playground/main.go)
+- [Repository Releases](https://github.com/robfordww/antconfig/releases)
+
+## Why Choose AntConfig for Go Configuration
+
+- Opinionated, zero-dependency design keeps binaries small and secure.
+- Works out of the box with tagged structs, env vars, JSON/JSONC files, and CLI flags.
+- Automatic config discovery and `.env` loading streamline deployment workflows.
+- Type-safe parsing for core Go types avoids reflection surprises at runtime.
 
 ## Features
 
@@ -13,6 +31,13 @@ AntConfig is a small, zero-dependency Go library for application configuration. 
 - Type-safe env parsing: string, int/uint, bool, float64, and `[]int` from JSON.
 - Supports .env files
 - Discovery helpers: locate config file by walking upward from CWD or executable.
+
+## Use Cases
+
+- Bootstrapping new Go microservices with minimal config wiring.
+- Shipping CLIs where predictable flag and env precedence is critical.
+- Migrating from heavier configuration stacks (e.g., Viper) to a lighter runtime.
+- Embedding configuration into serverless functions or containers with strict size budgets.
 
 
 ## Status and Precedence
