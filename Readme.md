@@ -7,14 +7,6 @@
 
 AntConfig is a small, zero-dependency Go configuration library focused on simplicity, clarity, and predictable precedence. Version `v0.1.0` marks the first tagged release and introduces refreshed documentation. Configuration is defined through tagged structs, which can be overridden by environment variables, a .env file, or command-line flags. Optional configuration files are supported in JSON or JSONC format only. Unlike many other configuration libraries that include support for TOML, YAML, and extensive feature sets, AntConfig is opinionated: it keeps things minimal, simple, and free of external dependencies.
 
-## Quick Links
-
-- [Go Reference](https://pkg.go.dev/github.com/robfordww/antconfig)
-- [Go Report Card](https://goreportcard.com/report/github.com/robfordww/antconfig)
-- [Package Issues](https://github.com/robfordww/antconfig/issues)
-- [Playground Example](playground/main.go)
-- [Repository Releases](https://github.com/robfordww/antconfig/releases)
-
 ## Why Choose AntConfig for Go Configuration
 
 - Opinionated, zero-dependency design keeps binaries small and secure.
@@ -134,7 +126,7 @@ limit (10 levels):
 - `antconfig.LocateFromWorkingDir(filename)`
 - `antconfig.LocateFromExe(filename)`
 
-Both return the first match found or `ErrConfigNotFound` if not found.
+Both return the first match travering upwards from the directory, otherwise `ErrConfigNotFound` is returned.
 
 ## API Overview (package `antconfig`)
 
@@ -181,7 +173,6 @@ if err := ant.WriteConfigValues(); err != nil { panic(err) }
 
 - Nested structs and pointers to structs are traversed and initialized as needed.
 - Empty env values do not override defaults.
-- Not supported yet: maps, slices of non-int types (e.g., `[]string`), TOML/YAML input.
 
 ## Playground
 
