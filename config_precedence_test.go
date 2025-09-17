@@ -39,8 +39,8 @@ func TestPrecedence_ConfigEnvDotenvFlags(t *testing.T) {
 		I int    `default:"1" env:"ACFG_I" flag:"i"`
 	}
 
-    var cfg Cfg
-    ant := New()
+	var cfg Cfg
+	ant := New()
 	if err := ant.SetConfigPath(cfgPath); err != nil {
 		t.Fatalf("SetConfigPath: %v", err)
 	}
@@ -52,10 +52,12 @@ func TestPrecedence_ConfigEnvDotenvFlags(t *testing.T) {
 	t.Setenv("ACFG_A", "OS")
 
 	// First pass: without flags, verify defaults < config < .env < OS env
-    if err := ant.SetConfig(&cfg); err != nil { t.Fatalf("SetConfig: %v", err) }
-    if err := ant.WriteConfigValues(); err != nil {
-        t.Fatalf("SetValues: %v", err)
-    }
+	if err := ant.SetConfig(&cfg); err != nil {
+		t.Fatalf("SetConfig: %v", err)
+	}
+	if err := ant.WriteConfigValues(); err != nil {
+		t.Fatalf("SetValues: %v", err)
+	}
 	if cfg.A == "defA" || cfg.B == "defB" || cfg.I == 1 {
 		t.Fatalf("config file should override defaults: %+v", cfg)
 	}
@@ -67,12 +69,14 @@ func TestPrecedence_ConfigEnvDotenvFlags(t *testing.T) {
 	}
 
 	// Second pass: with flags, verify flags override everything
-    cfg = Cfg{}
-    if err := ant.SetConfig(&cfg); err != nil { t.Fatalf("SetConfig: %v", err) }
-    ant.SetFlagArgs([]string{"--a=FLAG", "--i", "5"})
-    if err := ant.WriteConfigValues(); err != nil {
-        t.Fatalf("SetValues (flags): %v", err)
-    }
+	cfg = Cfg{}
+	if err := ant.SetConfig(&cfg); err != nil {
+		t.Fatalf("SetConfig: %v", err)
+	}
+	ant.SetFlagArgs([]string{"--a=FLAG", "--i", "5"})
+	if err := ant.WriteConfigValues(); err != nil {
+		t.Fatalf("SetValues (flags): %v", err)
+	}
 	if cfg.A != "FLAG" || cfg.I != 5 || cfg.B != "dotenvB" {
 		t.Fatalf("expected flags to win (A, I) and .env to remain for B, got %+v", cfg)
 	}
